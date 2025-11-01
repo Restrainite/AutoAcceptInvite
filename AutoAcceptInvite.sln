@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{1301b9ec-770f-4bd0-b87c-0213263dbf56}") = "AutoAcceptInvite", "AutoAcceptInvite.csproj", "{a86de841-e193-4e15-b7a5-0c7256df85b5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{a86de841-e193-4e15-b7a5-0c7256df85b5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{a86de841-e193-4e15-b7a5-0c7256df85b5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{a86de841-e193-4e15-b7a5-0c7256df85b5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{a86de841-e193-4e15-b7a5-0c7256df85b5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

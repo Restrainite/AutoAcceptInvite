@@ -1,0 +1,160 @@
+name: Update mod list on Release
+
+on:
+  release:
+    types:
+      - released
+  workflow_dispatch:
+    inputs: 
+      version:
+        description: "Version to be released"
+        required: true
+        type: string
+
+permissions: 
+  contents: read
+
+jobs:
+  update-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: restrainite/resonite-mod-manifest
+          ref: upstream
+          token: ${{ secrets.PAT }}
+          persist-credentials: true
+      - name: Collect release info
+        uses: actions/github-script@v7
+        with: 
+          github-token: '${{ github.token }}'
+          script: |
+            const https = require('https');
+            const crypto = require('crypto');
+            const fs = require('fs');
+            const path = require('path');
+            
+            let version;
+            if ('${{ github.event_name }}' === 'workflow_dispatch') {
+              version = '${{ inputs.version }}';
+              console.log(`Using workflow_dispatch input version: ${version}`);
+            } else {
+              const tag = '${{ github.ref }}';
+              const versionRegex = /^refs\/tags\/v\d+\.\d+\.\d+$/;
+              if (!versionRegex.test(tag)) {
+                throw new Error('Invalid version format. Expected format: refs/tags/v1.2.3 (exactly three numbers separated by dots)');
+              }
+              version = tag.replace('refs/tags/v', '');
+              console.log(`Using github.ref version: ${version}`);
+            }            
+            
+            const releaseResult = await github.rest.repos.getReleaseByTag({
+              owner: 'Restrainite',
+              repo: 'AutoAcceptInvite',
+              tag: `v${version}`
+            });
+            console.log(releaseResult);
+  
+            if (releaseResult.status !== 200) {
+              throw new Error(`Invalid status code: ${releaseResult.status}`);
+            }
+            
+            console.log(releaseResult.data.assets);
+            const asset = releaseResult.data.assets.find(asset => asset.name === 'AutoAcceptInvite.dll');
+            if (!asset) {
+              throw new Error("Asset named AutoAcceptInvite.dll not found");
+            }
+            
+            const fileRedirectPromise = new Promise((resolve, reject) => {
+              const request = https.get(asset.browser_download_url, res => {
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                  resolve(res.headers.location);
+                  res.resume();
+                  return;
+                } else {
+                  reject(new Error(`Request Failed. Status Code: ${res.statusCode}, Status Message: ${res.statusMessage}`));
+                  res.resume();
+                  return;
+                }
+                res.on('error', reject);
+              });
+              request.on('error', (error) => {
+                request.destroy();
+                reject(error);
+              });
+              request.on('timeout', () => {
+                request.destroy();
+                reject(new Error('Request timed out'));
+              });
+              
+              request.setTimeout(30000);
+            });
+            
+            const redirectUrl = await fileRedirectPromise;
+  
+            const fileHashPromise = new Promise((resolve, reject) => {
+              const request = https.get(redirectUrl, res => {
+                if (res.statusCode !== 200) {
+                  reject(new Error(`Request Failed. Status Code: ${res.statusCode}, Status Message: ${res.statusMessage}`));
+                  res.resume();
+                  return;
+                }
+    
+                const hash = crypto.createHash('sha256');
+                res.on('data', chunk => hash.update(chunk));
+                res.on('end', () => resolve(hash.digest('hex')));
+                res.on('error', reject);
+              });
+              request.on('error', (error) => {
+                request.destroy();
+                reject(error);
+              });
+              request.on('timeout', () => {
+                request.destroy();
+                reject(new Error('Request timed out'));
+              });
+              
+              request.setTimeout(30000);
+            });
+  
+            const hash = await fileHashPromise;
+  
+            const jsonPath = path.join('manifest', 'Restrainite', 'AutoAcceptInvite', 'info.json');
+            try {
+              await fs.promises.access(jsonPath);
+            } catch (error) {
+              throw new Error(`Manifest file not found: ${jsonPath}`);
+            }
+            const jsonData = JSON.parse(await fs.promises.readFile(jsonPath, 'utf8'));
+  
+            if (!jsonData || typeof jsonData !== 'object') {
+              throw new Error('Invalid JSON structure in manifest file');
+            }
+  
+  
+            jsonData.versions[version] = {
+              releaseUrl: releaseResult.data.html_url,
+              artifacts: [{
+                url: asset.browser_download_url,
+                sha256: hash,
+              }]
+            };
+            console.log(jsonData);
+            await fs.promises.writeFile(jsonPath, JSON.stringify(jsonData, null, '\t'), 'utf8');
+      
+      - name: Commit and push info.json file
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            REF="${{ github.ref }}"
+            VERSION="${REF#refs/tags/v}"
+          fi
+          git branch AutoAcceptInvite upstream
+          git switch AutoAcceptInvite
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add manifest/Restrainite/AutoAcceptInvite/info.json
+          git commit -m "Update AutoAcceptInvite to ${VERSION}" || echo "Nothing to do"
+          git push --force origin AutoAcceptInvite
