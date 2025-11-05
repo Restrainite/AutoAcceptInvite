@@ -19,10 +19,10 @@ internal static class MessageHandler
     [HarmonyPrefix]
     private static void OnLogin(EngineSkyFrostInterface __instance)
     {
-        __instance.Messages.OnMessageReceived += MessagesOnOnMessageReceived;
+        __instance.Messages.OnMessageReceived += OnMessageReceived;
     }
 
-    private static void MessagesOnOnMessageReceived(Message? message)
+    private static void OnMessageReceived(Message? message)
     {
         if (message == null || message.IsRead || message.IsSelfMessage || !message.IsValid || message.IsSent) return;
         if (Engine.Current.Cloud.Status.OnlineStatus < AutoAcceptInviteMod.Configuration.MinimumOnlineStatusLevel()) return;
@@ -179,6 +179,6 @@ internal static class MessageHandler
     [HarmonyPrefix]
     private static void OnLogout(EngineSkyFrostInterface __instance)
     {
-        __instance.Messages.OnMessageReceived -= MessagesOnOnMessageReceived;
+        __instance.Messages.OnMessageReceived -= OnMessageReceived;
     }
 }
