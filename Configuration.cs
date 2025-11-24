@@ -5,7 +5,7 @@ using SkyFrost.Base;
 
 namespace AutoAcceptInvite;
 
-internal class Configuration
+internal sealed class Configuration
 {
     private readonly ModConfigurationKey<bool> _autoAcceptInvites = new (
         "Auto-Accept Invites", "Automatically accept invites to other worlds.",() => true);
