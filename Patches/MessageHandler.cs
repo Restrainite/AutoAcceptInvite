@@ -45,10 +45,22 @@ internal static class MessageHandler
     private static void HandleInvite(Message message, SessionInfo sessionInfo)
     {
         ResoniteMod.Msg("Got invite from " + message.SenderId);
-        if (!AutoAcceptInviteMod.Configuration.IsUserIdEnabled(message.SenderId)) return;
-        var updatedSessionInfo = Engine.Current.Cloud.Sessions.TryGetInfo(sessionInfo.SessionId);
-        if (updatedSessionInfo?.IsCompatible() != true) return;
-        if (updatedSessionInfo.HasEnded) return;
+        if (!AutoAcceptInviteMod.Configuration.IsUserIdEnabled(message.SenderId))
+        {
+            ResoniteMod.Msg("User " + message.SenderId + " is not enabled for auto-accepting invites");
+            return;
+        }
+        var updatedSessionInfo = Engine.Current.Cloud.Sessions.TryGetInfo(sessionInfo.SessionId) ?? sessionInfo;
+        if (!updatedSessionInfo.IsCompatible())
+        {
+            ResoniteMod.Warn("Session " + sessionInfo.SessionId + " is not compatible with this version of Resonite");
+            return;
+        }
+        if (updatedSessionInfo.HasEnded)
+        {
+            ResoniteMod.Msg("Session " + sessionInfo.SessionId + " has ended");
+            return;
+        }
         if (CheckInviteInterval()) return;
         
         ResoniteMod.Msg("Accepting invite from " + message.SenderId);
@@ -79,8 +91,17 @@ internal static class MessageHandler
     private static void HandleInviteRequest(Message message, InviteRequest inviteRequest)
     {
         ResoniteMod.Msg("Got invite request from " + message.SenderId);
-        if (!AutoAcceptInviteMod.Configuration.IsUserIdEnabled(message.SenderId)) return;
-        if (inviteRequest.IsGranted) return;
+        if (!AutoAcceptInviteMod.Configuration.IsUserIdEnabled(message.SenderId))
+        {
+            ResoniteMod.Msg("User " + message.SenderId + " is not enabled for auto-accepting invite requests");
+            return;
+        }
+
+        if (inviteRequest.IsGranted)
+        {
+            ResoniteMod.Msg("Invite request from " + message.SenderId + " is already granted");
+            return;
+        }
         var focusedWorld = Engine.Current.WorldManager.FocusedWorld;
         if (inviteRequest.RequestingFromUserId == Engine.Current.Cloud.CurrentUserID)
         {
