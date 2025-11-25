@@ -31,6 +31,9 @@ public class AutoAcceptInviteMod : ResoniteMod
     public override IncompatibleConfigurationHandlingOption HandleIncompatibleConfigurationVersions(
         Version serializedVersion, Version definedVersion)
     {
+        if ((serializedVersion.Major == 1 && definedVersion.Major == 2) || 
+            (serializedVersion.Major == 2 && definedVersion.Major == 1))
+            return IncompatibleConfigurationHandlingOption.FORCELOAD;
         return IncompatibleConfigurationHandlingOption.CLOBBER;
     }
 
