@@ -14,7 +14,7 @@ namespace AutoAcceptInvite.Patches;
 internal static class MessageHandler
 {
     private static long _lastInvite = DateTime.UnixEpoch.ToBinary();
-    
+
     [HarmonyPatch(typeof(EngineSkyFrostInterface), "OnLogin")]
     [HarmonyPrefix]
     private static void OnLogin(EngineSkyFrostInterface __instance)
@@ -25,7 +25,8 @@ internal static class MessageHandler
     private static void OnMessageReceived(Message? message)
     {
         if (message == null || message.IsRead || message.IsSelfMessage || !message.IsValid || message.IsSent) return;
-        if (Engine.Current.Cloud.Status.OnlineStatus < AutoAcceptInviteMod.Configuration.MinimumOnlineStatusLevel()) return;
+        if (Engine.Current.Cloud.Status.OnlineStatus <
+            AutoAcceptInviteMod.Configuration.MinimumOnlineStatusLevel()) return;
 
         switch (message.MessageType)
         {
@@ -41,7 +42,7 @@ internal static class MessageHandler
                 break;
         }
     }
-    
+
     private static void HandleInvite(Message message, SessionInfo sessionInfo)
     {
         ResoniteMod.Msg("Got invite from " + message.SenderId);
@@ -50,26 +51,29 @@ internal static class MessageHandler
             ResoniteMod.Msg("User " + message.SenderId + " is not enabled for auto-accepting invites");
             return;
         }
+
         var updatedSessionInfo = Engine.Current.Cloud.Sessions.TryGetInfo(sessionInfo.SessionId) ?? sessionInfo;
         if (!updatedSessionInfo.IsCompatible())
         {
             ResoniteMod.Warn("Session " + sessionInfo.SessionId + " is not compatible with this version of Resonite");
             return;
         }
+
         if (updatedSessionInfo.HasEnded)
         {
             ResoniteMod.Msg("Session " + sessionInfo.SessionId + " has ended");
             return;
         }
+
         if (CheckInviteInterval()) return;
-        
+
         ResoniteMod.Msg("Accepting invite from " + message.SenderId);
         Userspace.OpenWorld(new WorldStartSettings()
         {
             URIs = sessionInfo.GetSessionURLs(),
             HostUserId = sessionInfo.HostUserId,
             GetExisting = true,
-            FetchedWorldName = (LocaleString) sessionInfo.Name
+            FetchedWorldName = (LocaleString)sessionInfo.Name
         });
         MarkMessageAsRead(message);
     }
@@ -81,9 +85,11 @@ internal static class MessageHandler
         var intervalEnd = lastInvite.AddSeconds(AutoAcceptInviteMod.Configuration.MinIntervalInSeconds());
         if (intervalEnd > now)
         {
-            ResoniteMod.Msg("Too soon to auto accept invite, waiting at least " + intervalEnd.Subtract(now).TotalSeconds + " seconds.");
+            ResoniteMod.Msg("Too soon to auto accept invite, waiting at least " +
+                            intervalEnd.Subtract(now).TotalSeconds + " seconds.");
             return true;
         }
+
         Interlocked.Exchange(ref _lastInvite, DateTime.UtcNow.ToBinary());
         return false;
     }
@@ -102,6 +108,7 @@ internal static class MessageHandler
             ResoniteMod.Msg("Invite request from " + message.SenderId + " is already granted");
             return;
         }
+
         var focusedWorld = Engine.Current.WorldManager.FocusedWorld;
         if (inviteRequest.RequestingFromUserId == Engine.Current.Cloud.CurrentUserID)
         {
@@ -115,16 +122,11 @@ internal static class MessageHandler
             else
             {
                 var userId = focusedWorld.HostUser.UserID;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return;
-                }
-                if (AutoAcceptInviteMod.Configuration.IsAllowForwardingToInstanceOwnerEnabled() &&
-                    Engine.Current.Cloud.Contacts.IsContact(userId, true))
-                {
-                    if (CheckInviteInterval()) return;
-                    ForwardInviteRequestToHost(message, inviteRequest);
-                }
+                if (string.IsNullOrEmpty(userId)) return;
+                if (!AutoAcceptInviteMod.Configuration.IsAllowForwardingToInstanceOwnerEnabled() ||
+                    !Engine.Current.Cloud.Contacts.IsContact(userId, true)) return;
+                if (CheckInviteInterval()) return;
+                ForwardInviteRequestToHost(message, inviteRequest);
             }
         }
         else if (AutoAcceptInviteMod.Configuration.IsAutoAcceptForwardedInviteRequestsEnabled())
@@ -143,15 +145,16 @@ internal static class MessageHandler
         {
             return;
         }
+
         var messages = Engine.Current.Cloud.Messages.GetUserMessages(contactId);
-        targetWorld.Coroutines.StartTask((Func<Task>) (async () =>
+        targetWorld.Coroutines.StartTask((Func<Task>)(async () =>
         {
             var inviteMessage = await messages.CreateInviteMessage(targetWorld);
             await messages.SendMessage(inviteMessage);
         }));
         MarkMessageAsRead(message);
     }
-    
+
     private static void ForwardInviteRequestToHost(Message message, InviteRequest inviteRequest)
     {
         var focusedWorld = Engine.Current.WorldManager.FocusedWorld;
@@ -159,23 +162,26 @@ internal static class MessageHandler
         var sessionId = focusedWorld.SessionId;
         var sessionName = focusedWorld.Name;
         ResoniteMod.Msg("Forwarding invite request to host " + hostId);
-        focusedWorld.Coroutines.StartTask((Func<Task>) (async () =>
+        focusedWorld.Coroutines.StartTask((Func<Task>)(async () =>
         {
-            await Engine.Current.Cloud.InviteRequests.ForwardInviteRequest(inviteRequest, sessionId, sessionName, hostId);
+            await Engine.Current.Cloud.InviteRequests.ForwardInviteRequest(inviteRequest, sessionId, sessionName,
+                hostId);
         }));
         MarkMessageAsRead(message);
     }
-    
+
     private static void GrantInvite(Message message, InviteRequest inviteRequest)
     {
         ResoniteMod.Msg("Granting invite request from " + message.SenderId + " to " + inviteRequest.UserIdToInvite);
-        var world = Engine.Current.WorldManager.GetWorld(w => w.IsAuthority && w.SessionId == inviteRequest.ForSessionId);
-        Task.Run((Func<Task>) (async () =>
+        var world =
+            Engine.Current.WorldManager.GetWorld(w => w.IsAuthority && w.SessionId == inviteRequest.ForSessionId);
+        Task.Run((Func<Task>)(async () =>
         {
             if (world != null)
                 await Engine.Current.Cloud.InviteRequests.SendInvite(inviteRequest, world);
             else
-                await Engine.Current.Cloud.InviteRequests.SendResponse(inviteRequest, InviteRequestResponse.SendInvite, message.SenderId);
+                await Engine.Current.Cloud.InviteRequests.SendResponse(inviteRequest, InviteRequestResponse.SendInvite,
+                    message.SenderId);
         }));
         MarkMessageAsRead(message);
     }
