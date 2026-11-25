@@ -9,7 +9,7 @@ AutoAcceptInvite is a [ResoniteModLoader](https://github.com/resonite-modding-gr
 
 ## Manual Installation
 
-1. Install [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader).
+1. Install [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) 5.0.4 or newer.
 2. Download the latest release from the [releases page](https://github.com/Restrainite/AutoAcceptInvite/releases).
 3. Place the DLL file in your `rml_mods` folder.
 4. (Optional) Install [ResoniteModSettings](https://github.com/badhaloninja/ResoniteModSettings) for an in-game configuration UI.
@@ -32,6 +32,7 @@ You can customize the mods behavior through the mod settings using [ResoniteModS
 - Control which types of invites are automatically accepted.
 - Set your minimum online status level for auto-accepting.
 - Configure a cooldown period between auto-accepted invites.
+- Choose whether the restrictions of [Restrainite](https://restrainite.github.io) are respected, if it is installed.
 
 ### Important Notes
 
@@ -47,9 +48,10 @@ You can customize the mods behavior through the mod settings using [ResoniteModS
 - **Auto-Accept Forwarded Invite Requests**: Automatically accept forwarded invite requests. (Default: `true`)
 - **Minimum Online Status Level**: Your minimum online status level required to auto-accept invites. (Default: `Online`)
 - **Minimum Interval (Seconds)**: The minimum interval in seconds between auto-accepted invites. Other invites are ignored. (Default: `60`)
+- **Respect Restrainite**: Don't auto-accept, if it is prevented by a [Restrainite](https://restrainite.github.io) restriction. (Default: `true`)
 
 ## About the project
-AutoAcceptInvite is © 2025 by SnepDrone
+AutoAcceptInvite is © 2025-2026 by SnepDrone
 
 Tested by Fuzy Sidwell and others
 

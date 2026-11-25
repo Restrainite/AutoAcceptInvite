@@ -4,8 +4,8 @@
         <Authors>SnepDrone</Authors>
         <Product>AutoAcceptInvite</Product>
         <Description>Automatically accept invites or invite requests from trusted friends.</Description>
-        <Version>2.0.4</Version>
-        <Copyright>&#169; 2025 $(Authors)</Copyright>
+        <Version>3.0.0</Version>
+        <Copyright>&#169; 2025-2026 $(Authors)</Copyright>
         <AssemblyVersion>$(Version)</AssemblyVersion>
         <AssemblyTitle>$(Product)</AssemblyTitle>
     </PropertyGroup>
@@ -17,7 +17,7 @@
         <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>AutoAcceptInvite</RootNamespace>
         <AssemblyName>AutoAcceptInvite</AssemblyName>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <FileAlignment>512</FileAlignment>
         <LangVersion>14</LangVersion>
         <Nullable>enable</Nullable>

@@ -25,6 +25,9 @@ internal sealed class Configuration
     private readonly ModConfigurationKey<int> _minIntervalInSeconds = new(
         "Minimum Interval (Seconds)", "The minimum interval in seconds between auto-accepted invites. Other invites are ignored.", () => 60);
 
+    private readonly ModConfigurationKey<bool> _respectRestrainite = new(
+        "Respect Restrainite", "Don't auto-accept, if it is prevented by a Restrainite restriction.", () => true);
+
     private readonly ModConfigurationKey<List<string>> _userIds = new(
         "User IDs", "The user IDs to enable auto-accepting invites for.", () => [], true
     );
@@ -43,6 +46,7 @@ internal sealed class Configuration
         builder.Key(_autoAcceptForwardedInviteRequests);
         builder.Key(_minimumOnlineStatusLevel);
         builder.Key(_minIntervalInSeconds);
+        builder.Key(_respectRestrainite);
         builder.Key(_userIds);
     }
     
@@ -63,6 +67,8 @@ internal sealed class Configuration
     public OnlineStatus MinimumOnlineStatusLevel() => _configuration?.GetValue(_minimumOnlineStatusLevel) ?? OnlineStatus.Online;
     
     public int MinIntervalInSeconds() => _configuration?.GetValue(_minIntervalInSeconds) ?? 60;
+    
+    public bool IsRespectRestrainiteEnabled() => _configuration?.GetValue(_respectRestrainite) ?? true;
     
     public bool IsUserIdEnabled(string userId) => _userIdSet.Contains(userId);
     

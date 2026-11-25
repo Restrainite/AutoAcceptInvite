@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Elements.Core;
 using FrooxEngine;
 using HarmonyLib;
@@ -19,6 +16,7 @@ internal static class MessageHandler
     [HarmonyPrefix]
     private static void OnLogin(EngineSkyFrostInterface __instance)
     {
+        __instance.Messages.OnMessageReceived -= OnMessageReceived;
         __instance.Messages.OnMessageReceived += OnMessageReceived;
     }
 
@@ -65,6 +63,12 @@ internal static class MessageHandler
             return;
         }
 
+        if (RestrainiteIntegration.IsSwitchingWorldPrevented)
+        {
+            ResoniteMod.Msg("Switching worlds is prevented by Restrainite");
+            return;
+        }
+
         if (CheckInviteInterval()) return;
 
         ResoniteMod.Msg("Accepting invite from " + message.SenderId);
@@ -106,6 +110,12 @@ internal static class MessageHandler
         if (inviteRequest.IsGranted)
         {
             ResoniteMod.Msg("Invite request from " + message.SenderId + " is already granted");
+            return;
+        }
+
+        if (RestrainiteIntegration.IsInvitingContactsPrevented)
+        {
+            ResoniteMod.Msg("Inviting contacts is prevented by Restrainite");
             return;
         }
 
@@ -202,9 +212,9 @@ internal static class MessageHandler
         }));
     }
 
-    [HarmonyPatch(typeof(EngineSkyFrostInterface), "OnLogout")]
+    [HarmonyPatch(typeof(SkyFrostInterface), "CompleteLogout")]
     [HarmonyPrefix]
-    private static void OnLogout(EngineSkyFrostInterface __instance)
+    private static void CompleteLogout(SkyFrostInterface __instance)
     {
         __instance.Messages.OnMessageReceived -= OnMessageReceived;
     }
